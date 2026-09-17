@@ -58,6 +58,9 @@ def test_flask_index_page() -> None:
     assert b"BigQuery Release Notes" in response.data
     assert b"css/style.css" in response.data
     assert b"js/app.js" in response.data
+    assert b"tweet-modal" in response.data
+    assert b"refresh-btn" in response.data
+
 
 
 def test_flask_health_endpoint() -> None:

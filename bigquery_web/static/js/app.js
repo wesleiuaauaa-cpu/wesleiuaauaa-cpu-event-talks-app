@@ -1,5 +1,6 @@
 /**
  * BigQuery Release Notes - Vanilla JavaScript Application
+ * Features: Live search, tag filter, theme switcher, spinner on refresh, and Tweet Composer
  */
 
 (function () {
@@ -15,9 +16,10 @@
     sortOrder: 'desc',
     expandedCards: new Set(),
     isLoading: false,
+    selectedNote: null,
   };
 
-  // DOM Elements
+  // Main DOM Elements
   const feedContainer = document.getElementById('feed-container');
   const searchInput = document.getElementById('search-input');
   const sortSelect = document.getElementById('sort-select');
@@ -29,12 +31,24 @@
   const lastUpdatedEl = document.getElementById('last-updated');
   const lastFetchedEl = document.getElementById('last-fetched');
 
+  // Tweet Modal Elements
+  const tweetModal = document.getElementById('tweet-modal');
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+  const modalCancelBtn = document.getElementById('modal-cancel-btn');
+  const tweetTextarea = document.getElementById('tweet-textarea');
+  const charCounter = document.getElementById('char-counter');
+  const sendTweetBtn = document.getElementById('send-tweet-btn');
+  const copyTweetBtn = document.getElementById('copy-tweet-btn');
+  const floatingTweetBtn = document.getElementById('floating-tweet-btn');
+
   /**
    * Initialize the application
    */
   function init() {
     initTheme();
     setupEventListeners();
+    setupTweetModalListeners();
+    setupTextSelectionListener();
     fetchNotes(false);
   }
 
@@ -106,15 +120,185 @@
   }
 
   /**
-   * Fetch notes from the Flask API
+   * Setup Tweet Modal Event Listeners
+   */
+  function setupTweetModalListeners() {
+    if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeTweetModal);
+    if (modalCancelBtn) modalCancelBtn.addEventListener('click', closeTweetModal);
+
+    // Close on backdrop click
+    if (tweetModal) {
+      tweetModal.addEventListener('click', (e) => {
+        if (e.target === tweetModal) closeTweetModal();
+      });
+    }
+
+    // Close on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && tweetModal && tweetModal.style.display !== 'none') {
+        closeTweetModal();
+      }
+    });
+
+    // Character counter
+    if (tweetTextarea) {
+      tweetTextarea.addEventListener('input', updateCharCount);
+    }
+
+    // Copy tweet text button
+    if (copyTweetBtn) {
+      copyTweetBtn.addEventListener('click', () => {
+        const text = tweetTextarea.value;
+        navigator.clipboard.writeText(text).then(() => {
+          const original = copyTweetBtn.innerHTML;
+          copyTweetBtn.innerHTML = '✓ Copied!';
+          setTimeout(() => { copyTweetBtn.innerHTML = original; }, 2000);
+        });
+      });
+    }
+
+    // Send tweet intent button
+    if (sendTweetBtn) {
+      sendTweetBtn.addEventListener('click', () => {
+        const text = tweetTextarea.value.trim();
+        if (!text) return;
+
+        const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+        const width = 550;
+        const height = 450;
+        const left = Math.max(0, (window.screen.width - width) / 2);
+        const top = Math.max(0, (window.screen.height - height) / 2);
+
+        window.open(
+          tweetUrl,
+          'TweetWindow',
+          `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
+        );
+      });
+    }
+  }
+
+  /**
+   * Setup text selection floating tweet button
+   */
+  function setupTextSelectionListener() {
+    if (!floatingTweetBtn) return;
+
+    document.addEventListener('mouseup', (e) => {
+      // Don't trigger if click was inside the modal or on the floating button itself
+      if (e.target.closest('#tweet-modal') || e.target.closest('#floating-tweet-btn')) {
+        return;
+      }
+
+      const selection = window.getSelection();
+      const selectedText = selection.toString().trim();
+
+      if (selectedText.length > 5 && selection.rangeCount > 0) {
+        // Find which card the selection belongs to, if any
+        const anchorNode = selection.anchorNode;
+        const cardElement = anchorNode ? (anchorNode.nodeType === 3 ? anchorNode.parentElement : anchorNode).closest('.release-card') : null;
+        
+        const rect = selection.getRangeAt(0).getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          floatingTweetBtn.style.display = 'block';
+          floatingTweetBtn.style.top = `${window.scrollY + rect.top - 40}px`;
+          floatingTweetBtn.style.left = `${window.scrollX + rect.left + (rect.width / 2) - 60}px`;
+
+          floatingTweetBtn.onclick = () => {
+            floatingTweetBtn.style.display = 'none';
+            let matchedNote = null;
+            if (cardElement && cardElement.dataset.noteId) {
+              matchedNote = state.notes.find(n => n.id === cardElement.dataset.noteId);
+            }
+            openTweetModalWithSelection(selectedText, matchedNote);
+          };
+          return;
+        }
+      }
+
+      // Hide if no valid selection
+      floatingTweetBtn.style.display = 'none';
+    });
+  }
+
+  /**
+   * Compose tweet content from note
+   */
+  function composeTweetText(note, customExcerpt = '') {
+    const title = note.date_formatted || note.title;
+    const url = note.link || 'https://docs.cloud.google.com/bigquery/docs/release-notes';
+    const hashtags = '#BigQuery #GoogleCloud';
+    
+    // Header & footer length
+    const prefix = `🚀 BigQuery Update (${title}):\n`;
+    const suffix = `\n\n🔗 ${url}\n${hashtags}`;
+
+    // Available space for excerpt
+    const maxExcerptLen = Math.max(20, 280 - (prefix.length + suffix.length));
+    let excerpt = customExcerpt || note.summary || '';
+    if (excerpt.length > maxExcerptLen) {
+      excerpt = excerpt.substring(0, maxExcerptLen - 3).trim() + '...';
+    }
+
+    return `${prefix}${excerpt}${suffix}`;
+  }
+
+  /**
+   * Open Tweet Composer modal
+   */
+  function openTweetModal(note) {
+    state.selectedNote = note;
+    const initialTweet = composeTweetText(note);
+    showModalWithText(initialTweet);
+  }
+
+  function openTweetModalWithSelection(selectedText, note) {
+    const fallbackNote = note || (state.notes.length > 0 ? state.notes[0] : null);
+    let tweetText = '';
+    if (fallbackNote) {
+      tweetText = composeTweetText(fallbackNote, selectedText);
+    } else {
+      tweetText = `💡 BigQuery: "${selectedText.substring(0, 180)}..."\n#BigQuery #GoogleCloud`;
+    }
+    showModalWithText(tweetText);
+  }
+
+  function showModalWithText(text) {
+    if (!tweetModal || !tweetTextarea) return;
+    tweetTextarea.value = text;
+    updateCharCount();
+    tweetModal.style.display = 'flex';
+    tweetTextarea.focus();
+  }
+
+  function closeTweetModal() {
+    if (tweetModal) tweetModal.style.display = 'none';
+  }
+
+  function updateCharCount() {
+    if (!tweetTextarea || !charCounter) return;
+    const len = tweetTextarea.value.length;
+    charCounter.textContent = `${len} / 280`;
+
+    charCounter.classList.remove('limit-near', 'limit-reached');
+    if (len >= 280) {
+      charCounter.classList.add('limit-reached');
+    } else if (len >= 240) {
+      charCounter.classList.add('limit-near');
+    }
+  }
+
+  /**
+   * Fetch notes from the Flask API with visible button spinner
    */
   async function fetchNotes(forceRefresh = false) {
     state.isLoading = true;
     renderLoading();
 
+    // Show spinner inside refresh button
     if (refreshBtn) {
       refreshBtn.disabled = true;
-      refreshBtn.innerHTML = '🔄 Fetching...';
+      refreshBtn.innerHTML = '<span class="btn-spinner"></span> Refreshing...';
     }
 
     try {
@@ -253,6 +437,7 @@
       const isExpanded = state.expandedCards.has(note.id);
       const card = document.createElement('article');
       card.className = 'release-card';
+      card.dataset.noteId = note.id;
       card.id = `note-${note.id.split('#')[1] || note.id}`;
 
       // Tag badges HTML
@@ -269,6 +454,9 @@
             <div class="tags-row">${tagsHtml}</div>
           </div>
           <div class="card-actions">
+            <button class="btn btn-tweet card-tweet-btn" title="Tweet this update on 𝕏">
+              𝕏 Tweet
+            </button>
             ${note.link ? `<a href="${escapeHtml(note.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon" title="Open official documentation">🔗</a>` : ''}
             <button class="btn btn-secondary btn-icon copy-btn" title="Copy anchor link">📋</button>
             <button class="btn btn-secondary toggle-card-btn">
@@ -280,6 +468,13 @@
           ${note.content_html}
         </div>
       `;
+
+      // Event listener for Tweet button
+      const tweetBtn = card.querySelector('.card-tweet-btn');
+      tweetBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openTweetModal(note);
+      });
 
       // Event listener for expand/collapse button
       const toggleBtn = card.querySelector('.toggle-card-btn');

@@ -100,7 +100,38 @@
     </p>
   </footer>
 
+  <!-- Tweet Composer Modal -->
+  <div id="tweet-modal" class="modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title" class="modal-title">Share Update on 𝕏 (Twitter)</h3>
+        <button id="modal-close-btn" class="modal-close" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-subtitle">Customize your tweet before posting:</p>
+        <textarea id="tweet-textarea" class="tweet-textarea" rows="5" maxlength="280"></textarea>
+        <div class="tweet-meta-row">
+          <span id="char-counter" class="char-counter">0 / 280</span>
+          <span class="tweet-hint">Includes link & tags</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-cancel-btn" class="btn btn-secondary">Cancel</button>
+        <button id="copy-tweet-btn" class="btn btn-secondary">📋 Copy Text</button>
+        <button id="send-tweet-btn" class="btn btn-primary">
+          <span class="x-icon">𝕏</span> Post to 𝕏
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Selection Tweet Tooltip -->
+  <button id="floating-tweet-btn" class="floating-tweet-btn" style="display: none;" title="Tweet highlighted text">
+    𝕏 Tweet selection
+  </button>
+
   <!-- Application Script -->
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
 </body>
 </html>
