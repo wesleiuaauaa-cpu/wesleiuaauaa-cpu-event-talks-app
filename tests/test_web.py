@@ -25,8 +25,8 @@ SAMPLE_ATOM_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
 def test_extract_tags() -> None:
     html = "<h3>Feature</h3><p>This is in Preview.</p>"
     tags = extract_tags(html)
-    assert "Feature" in tags
-    assert "Preview" in tags
+    assert "Recurso" in tags
+    assert "Prévia" in tags
 
 
 def test_strip_html() -> None:
@@ -37,7 +37,7 @@ def test_strip_html() -> None:
 
 def test_format_iso_date() -> None:
     formatted = format_iso_date("2026-09-16T00:00:00-07:00")
-    assert "September 16, 2026" in formatted
+    assert "16 de setembro de 2026" in formatted
 
 
 def test_parse_feed_xml() -> None:
@@ -46,8 +46,8 @@ def test_parse_feed_xml() -> None:
     assert result["total_entries"] == 1
     entry = result["entries"][0]
     assert entry["title"] == "September 16, 2026"
-    assert "Feature" in entry["tags"]
-    assert "Preview" in entry["tags"]
+    assert "Recurso" in entry["tags"]
+    assert "Prévia" in entry["tags"]
     assert "migration lineage" in entry["summary"]
 
 
@@ -55,11 +55,12 @@ def test_flask_index_page() -> None:
     client = app.test_client()
     response = client.get("/")
     assert response.status_code == 200
-    assert b"BigQuery Release Notes" in response.data
+    assert "Notas de Atualização do BigQuery".encode() in response.data
     assert b"css/style.css" in response.data
     assert b"js/app.js" in response.data
     assert b"tweet-modal" in response.data
     assert b"refresh-btn" in response.data
+
 
 
 

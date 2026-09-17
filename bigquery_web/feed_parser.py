@@ -16,22 +16,48 @@ _feed_cache: dict[str, Any] = {
 }
 
 
+TAG_TRANSLATIONS = {
+    "Feature": "Recurso",
+    "Change": "Alteração",
+    "Preview": "Prévia",
+    "GA": "GA",
+    "Deprecated": "Descontinuado",
+    "Fix": "Correção",
+    "Announcement": "Anúncio",
+}
+
+MESES_PT_BR = {
+    1: "Janeiro",
+    2: "Fevereiro",
+    3: "Março",
+    4: "Abril",
+    5: "Maio",
+    6: "Junho",
+    7: "Julho",
+    8: "Agosto",
+    9: "Setembro",
+    10: "Outubro",
+    11: "Novembro",
+    12: "Dezembro",
+}
+
+
 def extract_tags(html_content: str) -> list[str]:
-    """Extract category tags from the HTML content headers or keywords."""
+    """Extract category tags and translate to PT-BR."""
     tags = set()
     h3_matches = re.findall(r"<h3>(.*?)</h3>", html_content, re.IGNORECASE)
     for match in h3_matches:
-        clean_tag = re.sub(r"<[^>]+>", "", match).strip()
+        clean_tag = re.sub(r"<[^>]+>", "", match).strip().capitalize()
         if clean_tag:
-            tags.add(clean_tag.capitalize())
+            tags.add(TAG_TRANSLATIONS.get(clean_tag, clean_tag))
 
     # Detect preview / GA status
     if re.search(r"\bpreview\b", html_content, re.IGNORECASE):
-        tags.add("Preview")
+        tags.add("Prévia")
     if re.search(r"\b(generally available|GA)\b", html_content, re.IGNORECASE):
         tags.add("GA")
     if re.search(r"\bdeprecated?\b", html_content, re.IGNORECASE):
-        tags.add("Deprecated")
+        tags.add("Descontinuado")
 
     return sorted(list(tags))
 
@@ -44,14 +70,15 @@ def strip_html(html_text: str) -> str:
     return " ".join(text.split())
 
 
-
 def format_iso_date(iso_str: str) -> str:
-    """Format an ISO date string into readable format."""
+    """Format an ISO date string into readable PT-BR format."""
     try:
         dt = datetime.fromisoformat(iso_str)
-        return dt.strftime("%B %d, %Y")
+        mes = MESES_PT_BR.get(dt.month, dt.strftime("%B"))
+        return f"{dt.day} de {mes.lower()} de {dt.year}"
     except Exception:
         return iso_str
+
 
 
 def parse_feed_xml(xml_bytes: bytes) -> dict[str, Any]:

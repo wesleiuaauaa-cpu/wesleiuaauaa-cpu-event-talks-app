@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BigQuery Release Notes</title>
+  <title>Notas de Atualização do BigQuery</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -14,16 +14,16 @@
       <a href="/" class="brand">
         <div class="brand-icon">BQ</div>
         <div class="brand-text">
-          <h1>BigQuery Release Notes</h1>
-          <p>Official Google Cloud Feed Reader</p>
+          <h1>Notas de Atualização do BigQuery</h1>
+          <p>Leitor Oficial do Feed Google Cloud</p>
         </div>
       </a>
       <div class="nav-actions">
-        <button id="theme-toggle-btn" class="btn btn-secondary" title="Toggle color theme">
-          🌙 <span class="hide-mobile">Dark</span>
+        <button id="theme-toggle-btn" class="btn btn-secondary" title="Alternar tema de cores">
+          🌙 <span class="hide-mobile">Escuro</span>
         </button>
-        <button id="refresh-btn" class="btn btn-primary" title="Fetch latest feed updates">
-          🔄 Refresh Feed
+        <button id="refresh-btn" class="btn btn-primary" title="Buscar atualizações mais recentes">
+          🔄 Atualizar Feed
         </button>
       </div>
     </div>
@@ -36,20 +36,20 @@
     <section class="meta-banner">
       <div class="stats-group">
         <div class="stat-item">
-          <span class="stat-label">Total Releases</span>
+          <span class="stat-label">Total de Atualizações</span>
           <span class="stat-value" id="total-count">--</span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Feed Last Updated</span>
+          <span class="stat-label">Feed Atualizado em</span>
           <span class="stat-value" id="last-updated">--</span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Cache Synced At</span>
+          <span class="stat-label">Cache Sincronizado em</span>
           <span class="stat-value" id="last-fetched">--</span>
         </div>
       </div>
       <div>
-        <button id="toggle-all-btn" class="btn btn-secondary">Collapse All</button>
+        <button id="toggle-all-btn" class="btn btn-secondary">Recolher Todos</button>
       </div>
     </section>
 
@@ -61,13 +61,13 @@
           <input 
             type="text" 
             id="search-input" 
-            placeholder="Search release notes by keyword, model, feature (e.g. Gemini, ML, Vector)..." 
+            placeholder="Buscar notas de atualização por palavra-chave, modelo, recurso (ex: Gemini, ML, Vetor)..." 
             autocomplete="off"
           />
         </div>
-        <select id="sort-select" class="sort-select" title="Sort order">
-          <option value="desc">Sort: Newest First</option>
-          <option value="asc">Sort: Oldest First</option>
+        <select id="sort-select" class="sort-select" title="Ordem de exibição">
+          <option value="desc">Ordenar: Mais recentes primeiro</option>
+          <option value="asc">Ordenar: Mais antigas primeiro</option>
         </select>
       </div>
 
@@ -81,7 +81,7 @@
     <section class="feed-stream" id="feed-container">
       <div class="loading-state">
         <div class="spinner"></div>
-        <h3>Loading Release Notes...</h3>
+        <h3>Carregando Notas de Atualização...</h3>
       </div>
     </section>
 
@@ -90,13 +90,13 @@
   <!-- Footer -->
   <footer class="footer">
     <p>
-      Data sourced from 
+      Dados obtidos do 
       <a href="https://docs.cloud.google.com/feeds/bigquery-release-notes.xml" target="_blank" rel="noopener noreferrer">
-        Google Cloud BigQuery Release Notes Atom Feed
+        Feed Atom Oficial de Notas de Atualização do Google Cloud BigQuery
       </a>.
     </p>
     <p style="margin-top: 0.35rem;">
-      Built with Python Flask and vanilla HTML5, CSS3, & JavaScript.
+      Desenvolvido com Python Flask e HTML5, CSS3 e JavaScript puros.
     </p>
   </footer>
 
@@ -104,34 +104,35 @@
   <div id="tweet-modal" class="modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="modal-title" class="modal-title">Share Update on 𝕏 (Twitter)</h3>
-        <button id="modal-close-btn" class="modal-close" aria-label="Close modal">✕</button>
+        <h3 id="modal-title" class="modal-title">Compartilhar Atualização no 𝕏 (Twitter)</h3>
+        <button id="modal-close-btn" class="modal-close" aria-label="Fechar janela">✕</button>
       </div>
       <div class="modal-body">
-        <p class="modal-subtitle">Customize your tweet before posting:</p>
+        <p class="modal-subtitle">Personalize seu tweet antes de publicar:</p>
         <textarea id="tweet-textarea" class="tweet-textarea" rows="5" maxlength="280"></textarea>
         <div class="tweet-meta-row">
           <span id="char-counter" class="char-counter">0 / 280</span>
-          <span class="tweet-hint">Includes link & tags</span>
+          <span class="tweet-hint">Inclui link e hashtags</span>
         </div>
       </div>
       <div class="modal-footer">
-        <button id="modal-cancel-btn" class="btn btn-secondary">Cancel</button>
-        <button id="copy-tweet-btn" class="btn btn-secondary">📋 Copy Text</button>
+        <button id="modal-cancel-btn" class="btn btn-secondary">Cancelar</button>
+        <button id="copy-tweet-btn" class="btn btn-secondary">📋 Copiar Texto</button>
         <button id="send-tweet-btn" class="btn btn-primary">
-          <span class="x-icon">𝕏</span> Post to 𝕏
+          <span class="x-icon">𝕏</span> Postar no 𝕏
         </button>
       </div>
     </div>
   </div>
 
   <!-- Floating Selection Tweet Tooltip -->
-  <button id="floating-tweet-btn" class="floating-tweet-btn" style="display: none;" title="Tweet highlighted text">
-    𝕏 Tweet selection
+  <button id="floating-tweet-btn" class="floating-tweet-btn" style="display: none;" title="Tweetar texto selecionado">
+    𝕏 Tweetar seleção
   </button>
 
   <!-- Application Script -->
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
 
 </body>
 </html>

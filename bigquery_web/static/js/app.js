@@ -1,17 +1,17 @@
 /**
- * BigQuery Release Notes - Vanilla JavaScript Application
- * Features: Live search, tag filter, theme switcher, spinner on refresh, and Tweet Composer
+ * Notas de Atualização do BigQuery - Aplicação Vanilla JavaScript
+ * Recursos: Busca em tempo real, filtros de categoria, alternador de temas, spinner no refresh e Compositor de Tweets
  */
 
 (function () {
   'use strict';
 
-  // Application State
+  // Estado da Aplicação
   const state = {
     notes: [],
     filteredNotes: [],
     metadata: {},
-    activeTag: 'All',
+    activeTag: 'Todos',
     searchQuery: '',
     sortOrder: 'desc',
     expandedCards: new Set(),
@@ -19,7 +19,7 @@
     selectedNote: null,
   };
 
-  // Main DOM Elements
+  // Elementos Principais do DOM
   const feedContainer = document.getElementById('feed-container');
   const searchInput = document.getElementById('search-input');
   const sortSelect = document.getElementById('sort-select');
@@ -31,7 +31,7 @@
   const lastUpdatedEl = document.getElementById('last-updated');
   const lastFetchedEl = document.getElementById('last-fetched');
 
-  // Tweet Modal Elements
+  // Elementos do Modal de Tweet
   const tweetModal = document.getElementById('tweet-modal');
   const modalCloseBtn = document.getElementById('modal-close-btn');
   const modalCancelBtn = document.getElementById('modal-cancel-btn');
@@ -42,7 +42,7 @@
   const floatingTweetBtn = document.getElementById('floating-tweet-btn');
 
   /**
-   * Initialize the application
+   * Inicialização da aplicação
    */
   function init() {
     initTheme();
@@ -53,7 +53,7 @@
   }
 
   /**
-   * Theme switcher
+   * Alternador de Tema (Claro / Escuro)
    */
   function initTheme() {
     const savedTheme = localStorage.getItem('bq-theme') || 
@@ -66,8 +66,8 @@
     localStorage.setItem('bq-theme', theme);
     if (themeToggleBtn) {
       themeToggleBtn.innerHTML = theme === 'dark' 
-        ? '☀️ <span class="hide-mobile">Light</span>' 
-        : '🌙 <span class="hide-mobile">Dark</span>';
+        ? '☀️ <span class="hide-mobile">Claro</span>' 
+        : '🌙 <span class="hide-mobile">Escuro</span>';
     }
   }
 
@@ -77,7 +77,7 @@
   }
 
   /**
-   * Setup UI Event Listeners
+   * Ouvintes de Eventos da Interface
    */
   function setupEventListeners() {
     if (searchInput) {
@@ -109,10 +109,10 @@
         const allExpanded = state.expandedCards.size === state.filteredNotes.length;
         if (allExpanded) {
           state.expandedCards.clear();
-          toggleAllBtn.textContent = 'Expand All';
+          toggleAllBtn.textContent = 'Expandir Todos';
         } else {
           state.filteredNotes.forEach(note => state.expandedCards.add(note.id));
-          toggleAllBtn.textContent = 'Collapse All';
+          toggleAllBtn.textContent = 'Recolher Todos';
         }
         renderFeed();
       });
@@ -120,44 +120,44 @@
   }
 
   /**
-   * Setup Tweet Modal Event Listeners
+   * Ouvintes de Eventos do Modal de Tweet
    */
   function setupTweetModalListeners() {
     if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeTweetModal);
     if (modalCancelBtn) modalCancelBtn.addEventListener('click', closeTweetModal);
 
-    // Close on backdrop click
+    // Fechar ao clicar fora do cartão
     if (tweetModal) {
       tweetModal.addEventListener('click', (e) => {
         if (e.target === tweetModal) closeTweetModal();
       });
     }
 
-    // Close on ESC key
+    // Fechar com a tecla ESC
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && tweetModal && tweetModal.style.display !== 'none') {
         closeTweetModal();
       }
     });
 
-    // Character counter
+    // Contador de caracteres
     if (tweetTextarea) {
       tweetTextarea.addEventListener('input', updateCharCount);
     }
 
-    // Copy tweet text button
+    // Botão de copiar texto
     if (copyTweetBtn) {
       copyTweetBtn.addEventListener('click', () => {
         const text = tweetTextarea.value;
         navigator.clipboard.writeText(text).then(() => {
           const original = copyTweetBtn.innerHTML;
-          copyTweetBtn.innerHTML = '✓ Copied!';
+          copyTweetBtn.innerHTML = '✓ Copiado!';
           setTimeout(() => { copyTweetBtn.innerHTML = original; }, 2000);
         });
       });
     }
 
-    // Send tweet intent button
+    // Botão de postar no 𝕏 / Twitter
     if (sendTweetBtn) {
       sendTweetBtn.addEventListener('click', () => {
         const text = tweetTextarea.value.trim();
@@ -179,13 +179,12 @@
   }
 
   /**
-   * Setup text selection floating tweet button
+   * Ouvinte de seleção de texto para o botão flutuante de Tweet
    */
   function setupTextSelectionListener() {
     if (!floatingTweetBtn) return;
 
     document.addEventListener('mouseup', (e) => {
-      // Don't trigger if click was inside the modal or on the floating button itself
       if (e.target.closest('#tweet-modal') || e.target.closest('#floating-tweet-btn')) {
         return;
       }
@@ -194,7 +193,6 @@
       const selectedText = selection.toString().trim();
 
       if (selectedText.length > 5 && selection.rangeCount > 0) {
-        // Find which card the selection belongs to, if any
         const anchorNode = selection.anchorNode;
         const cardElement = anchorNode ? (anchorNode.nodeType === 3 ? anchorNode.parentElement : anchorNode).closest('.release-card') : null;
         
@@ -216,24 +214,21 @@
         }
       }
 
-      // Hide if no valid selection
       floatingTweetBtn.style.display = 'none';
     });
   }
 
   /**
-   * Compose tweet content from note
+   * Composição do texto do Tweet a partir da nota
    */
   function composeTweetText(note, customExcerpt = '') {
     const title = note.date_formatted || note.title;
     const url = note.link || 'https://docs.cloud.google.com/bigquery/docs/release-notes';
     const hashtags = '#BigQuery #GoogleCloud';
     
-    // Header & footer length
-    const prefix = `🚀 BigQuery Update (${title}):\n`;
+    const prefix = `🚀 Atualização do BigQuery (${title}):\n`;
     const suffix = `\n\n🔗 ${url}\n${hashtags}`;
 
-    // Available space for excerpt
     const maxExcerptLen = Math.max(20, 280 - (prefix.length + suffix.length));
     let excerpt = customExcerpt || note.summary || '';
     if (excerpt.length > maxExcerptLen) {
@@ -244,7 +239,7 @@
   }
 
   /**
-   * Open Tweet Composer modal
+   * Abrir o Modal de Tweet
    */
   function openTweetModal(note) {
     state.selectedNote = note;
@@ -289,16 +284,15 @@
   }
 
   /**
-   * Fetch notes from the Flask API with visible button spinner
+   * Buscar notas de atualização com feedback de spinner no botão
    */
   async function fetchNotes(forceRefresh = false) {
     state.isLoading = true;
     renderLoading();
 
-    // Show spinner inside refresh button
     if (refreshBtn) {
       refreshBtn.disabled = true;
-      refreshBtn.innerHTML = '<span class="btn-spinner"></span> Refreshing...';
+      refreshBtn.innerHTML = '<span class="btn-spinner"></span> Atualizando...';
     }
 
     try {
@@ -307,13 +301,13 @@
       const json = await res.json();
 
       if (!res.ok || !json.success) {
-        throw new Error(json.error || 'Failed to fetch release notes.');
+        throw new Error(json.error || 'Falha ao buscar as notas de atualização.');
       }
 
       state.metadata = json.data;
       state.notes = json.data.entries || [];
       
-      // Initially expand all notes
+      // Expandir todas as notas inicialmente
       state.expandedCards = new Set(state.notes.map(n => n.id));
 
       updateMetadataDisplay();
@@ -325,46 +319,45 @@
       state.isLoading = false;
       if (refreshBtn) {
         refreshBtn.disabled = false;
-        refreshBtn.innerHTML = '🔄 Refresh Feed';
+        refreshBtn.innerHTML = '🔄 Atualizar Feed';
       }
     }
   }
 
   /**
-   * Update header metadata stats
+   * Atualizar indicadores de metadados no cabeçalho
    */
   function updateMetadataDisplay() {
     if (totalCountEl) {
       totalCountEl.textContent = state.notes.length;
     }
     if (lastUpdatedEl) {
-      lastUpdatedEl.textContent = state.metadata.updated_formatted || state.metadata.updated || 'N/A';
+      lastUpdatedEl.textContent = state.metadata.updated_formatted || state.metadata.updated || 'N/D';
     }
     if (lastFetchedEl) {
-      lastFetchedEl.textContent = state.metadata.fetched_at || 'Just now';
+      lastFetchedEl.textContent = state.metadata.fetched_at || 'Agora mesmo';
     }
   }
 
   /**
-   * Render dynamic tag filter chips
+   * Renderizar chips de filtro por categoria
    */
   function renderTagFilters() {
     if (!tagsContainer) return;
 
-    // Collect unique tags
     const tagSet = new Set();
     state.notes.forEach(note => {
       (note.tags || []).forEach(tag => tagSet.add(tag));
     });
 
-    const standardTags = ['All', 'Feature', 'Change', 'Preview', 'GA', 'Deprecated'];
+    const standardTags = ['Todos', 'Recurso', 'Alteração', 'Prévia', 'GA', 'Descontinuado'];
     const otherTags = Array.from(tagSet).filter(t => !standardTags.includes(t));
     const allDisplayTags = [...standardTags, ...otherTags];
 
     tagsContainer.innerHTML = '';
     const label = document.createElement('span');
     label.className = 'filter-label';
-    label.textContent = 'Category:';
+    label.textContent = 'Categoria:';
     tagsContainer.appendChild(label);
 
     allDisplayTags.forEach(tag => {
@@ -382,29 +375,30 @@
   }
 
   /**
-   * Filter and sort release notes
+   * Filtrar e ordenar notas de atualização
    */
   function applyFilters() {
     let result = [...state.notes];
 
-    // Filter by tag
-    if (state.activeTag !== 'All') {
+    // Filtrar por tag
+    if (state.activeTag !== 'Todos') {
       result = result.filter(note => 
         (note.tags || []).map(t => t.toLowerCase()).includes(state.activeTag.toLowerCase())
       );
     }
 
-    // Filter by search query
+    // Filtrar por texto da busca
     if (state.searchQuery) {
       result = result.filter(note => {
         const titleMatch = note.title.toLowerCase().includes(state.searchQuery);
+        const dateMatch = (note.date_formatted || '').toLowerCase().includes(state.searchQuery);
         const summaryMatch = (note.summary || '').toLowerCase().includes(state.searchQuery);
         const htmlMatch = (note.content_html || '').toLowerCase().includes(state.searchQuery);
-        return titleMatch || summaryMatch || htmlMatch;
+        return titleMatch || dateMatch || summaryMatch || htmlMatch;
       });
     }
 
-    // Sort order
+    // Ordenar por data
     result.sort((a, b) => {
       const dateA = new Date(a.updated).getTime() || 0;
       const dateB = new Date(b.updated).getTime() || 0;
@@ -416,7 +410,7 @@
   }
 
   /**
-   * Render the release notes list
+   * Renderizar cartões do feed
    */
   function renderFeed() {
     if (!feedContainer) return;
@@ -424,8 +418,8 @@
     if (state.filteredNotes.length === 0) {
       feedContainer.innerHTML = `
         <div class="empty-state">
-          <h3>No release notes found</h3>
-          <p>Try adjusting your search keywords or category filters.</p>
+          <h3>Nenhuma nota de atualização encontrada</h3>
+          <p>Tente ajustar suas palavras-chave de busca ou filtros de categoria.</p>
         </div>
       `;
       return;
@@ -440,7 +434,6 @@
       card.dataset.noteId = note.id;
       card.id = `note-${note.id.split('#')[1] || note.id}`;
 
-      // Tag badges HTML
       const tagsHtml = (note.tags || []).map(tag => {
         const tagClass = getTagClass(tag);
         return `<span class="tag-badge ${tagClass}">${escapeHtml(tag)}</span>`;
@@ -450,17 +443,17 @@
         <div class="card-header">
           <div class="card-title-group">
             <h2 class="card-title">${escapeHtml(note.title)}</h2>
-            <div class="card-date">Updated on: ${escapeHtml(note.date_formatted || note.updated)}</div>
+            <div class="card-date">Atualizado em: ${escapeHtml(note.date_formatted || note.updated)}</div>
             <div class="tags-row">${tagsHtml}</div>
           </div>
           <div class="card-actions">
-            <button class="btn btn-tweet card-tweet-btn" title="Tweet this update on 𝕏">
-              𝕏 Tweet
+            <button class="btn btn-tweet card-tweet-btn" title="Tweetar esta atualização no 𝕏">
+              𝕏 Tweetar
             </button>
-            ${note.link ? `<a href="${escapeHtml(note.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon" title="Open official documentation">🔗</a>` : ''}
-            <button class="btn btn-secondary btn-icon copy-btn" title="Copy anchor link">📋</button>
+            ${note.link ? `<a href="${escapeHtml(note.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon" title="Abrir documentação oficial">🔗</a>` : ''}
+            <button class="btn btn-secondary btn-icon copy-btn" title="Copiar link direto">📋</button>
             <button class="btn btn-secondary toggle-card-btn">
-              ${isExpanded ? 'Collapse ▲' : 'Expand ▼'}
+              ${isExpanded ? 'Recolher ▲' : 'Expandir ▼'}
             </button>
           </div>
         </div>
@@ -469,29 +462,26 @@
         </div>
       `;
 
-      // Event listener for Tweet button
       const tweetBtn = card.querySelector('.card-tweet-btn');
       tweetBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         openTweetModal(note);
       });
 
-      // Event listener for expand/collapse button
       const toggleBtn = card.querySelector('.toggle-card-btn');
       const cardBody = card.querySelector('.card-body');
       toggleBtn.addEventListener('click', () => {
         if (state.expandedCards.has(note.id)) {
           state.expandedCards.delete(note.id);
           cardBody.style.display = 'none';
-          toggleBtn.textContent = 'Expand ▼';
+          toggleBtn.textContent = 'Expandir ▼';
         } else {
           state.expandedCards.add(note.id);
           cardBody.style.display = 'block';
-          toggleBtn.textContent = 'Collapse ▲';
+          toggleBtn.textContent = 'Recolher ▲';
         }
       });
 
-      // Event listener for copy link
       const copyBtn = card.querySelector('.copy-btn');
       copyBtn.addEventListener('click', () => {
         const linkToCopy = note.link || window.location.href;
@@ -507,11 +497,11 @@
 
   function getTagClass(tag) {
     const t = tag.toLowerCase();
-    if (t.includes('feature')) return 'tag-feature';
-    if (t.includes('change')) return 'tag-change';
-    if (t.includes('preview')) return 'tag-preview';
+    if (t.includes('recurso') || t.includes('feature')) return 'tag-feature';
+    if (t.includes('alteração') || t.includes('alteracao') || t.includes('change')) return 'tag-change';
+    if (t.includes('prévia') || t.includes('previa') || t.includes('preview')) return 'tag-preview';
     if (t.includes('ga') || t.includes('generally')) return 'tag-ga';
-    if (t.includes('deprecat')) return 'tag-deprecated';
+    if (t.includes('descontinuado') || t.includes('deprecat')) return 'tag-deprecated';
     return 'tag-default';
   }
 
@@ -520,8 +510,8 @@
     feedContainer.innerHTML = `
       <div class="loading-state">
         <div class="spinner"></div>
-        <h3>Fetching BigQuery Release Notes...</h3>
-        <p>Connecting to Google Cloud feed...</p>
+        <h3>Buscando Notas de Atualização do BigQuery...</h3>
+        <p>Conectando ao feed do Google Cloud...</p>
       </div>
     `;
   }
@@ -530,9 +520,9 @@
     if (!feedContainer) return;
     feedContainer.innerHTML = `
       <div class="error-state">
-        <h3>Unable to load release notes</h3>
+        <h3>Não foi possível carregar as notas de atualização</h3>
         <p>${escapeHtml(message)}</p>
-        <button class="btn btn-primary" id="retry-fetch-btn" style="margin-top: 1rem;">Retry Now</button>
+        <button class="btn btn-primary" id="retry-fetch-btn" style="margin-top: 1rem;">Tentar Novamente</button>
       </div>
     `;
     const retryBtn = document.getElementById('retry-fetch-btn');
@@ -547,7 +537,6 @@
     return div.innerHTML;
   }
 
-  // Run on DOM load
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
