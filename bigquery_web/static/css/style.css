@@ -184,6 +184,12 @@ body {
   color: var(--accent);
 }
 
+.btn-success {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  border-color: #10b981 !important;
+}
+
 /* Main Container */
 .main-content {
   max-width: 1200px;
@@ -204,6 +210,13 @@ body {
   justify-content: space-between;
   gap: 1rem;
   box-shadow: var(--shadow-sm);
+}
+
+.meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
 }
 
 .stats-group {

@@ -45,6 +45,8 @@ O projeto resolve o desafio de acompanhar as constantes atualizações e anúnci
 - **Tema Claro / Escuro**: Suporte a Dark/Light mode com persistência local no navegador (`localStorage`).
 - **Cache Inteligente**: Cache em memória no servidor com TTL de 15 minutos e botão de atualização forçada (*Force Refresh*) com indicador visual de spinner.
 - **Compositor de Tweets (𝕏)**: Compartilhamento rápido de notas ou trechos de texto selecionados diretamente para o Twitter/𝕏, com validação de 280 caracteres.
+- **Copiar para a Área de Transferência**: Botão em cada card para copiar título, data, resumo, categorias e link formatados prontos para compartilhamento, com feedback visual.
+- **Exportação para CSV**: Botão dedicado no painel superior para download instantâneo das notas filtradas em formato `.csv` (com suporte a UTF-8 BOM para abrir no Microsoft Excel sem falhas de acentuação).
 
 ### 💻 Interface de Linha de Comando (CLI)
 - Desenvolvida com **Typer** e visual moderno no terminal com **Rich**.
@@ -205,6 +207,7 @@ python -m cli_antigravity.main web --port 5000
 | :--- | :--- | :--- | :--- |
 | `GET` | `/` | — | Renderiza a página principal (`index.html`). |
 | `GET` | `/api/notes` | `refresh=true` (opcional) | Retorna as notas de lançamento parseadas em formato JSON. |
+| `GET` | `/api/export/csv` | — | Gera e faz o download de todas as notas em formato CSV. |
 | `GET` | `/api/health` | — | Endpoint de verificação de integridade (*health check*). |
 
 #### Exemplo de Resposta de `/api/notes`:

@@ -25,6 +25,7 @@
   const sortSelect = document.getElementById('sort-select');
   const tagsContainer = document.getElementById('tags-container');
   const refreshBtn = document.getElementById('refresh-btn');
+  const exportCsvBtn = document.getElementById('export-csv-btn');
   const themeToggleBtn = document.getElementById('theme-toggle-btn');
   const toggleAllBtn = document.getElementById('toggle-all-btn');
   const totalCountEl = document.getElementById('total-count');
@@ -98,6 +99,10 @@
       refreshBtn.addEventListener('click', () => {
         fetchNotes(true);
       });
+    }
+
+    if (exportCsvBtn) {
+      exportCsvBtn.addEventListener('click', exportToCsv);
     }
 
     if (themeToggleBtn) {
@@ -410,6 +415,107 @@
   }
 
   /**
+   * Função auxiliar para copiar texto com fallback
+   */
+  function copyTextToClipboard(text, onSuccess) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
+        fallbackCopy(text, onSuccess);
+      });
+    } else {
+      fallbackCopy(text, onSuccess);
+    }
+  }
+
+  function fallbackCopy(text, onSuccess) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      console.error('Erro ao copiar texto:', err);
+    }
+    document.body.removeChild(textarea);
+  }
+
+  /**
+   * Exportar notas filtradas para um arquivo CSV
+   */
+  function exportToCsv() {
+    const notesToExport = state.filteredNotes && state.filteredNotes.length > 0 
+      ? state.filteredNotes 
+      : state.notes;
+
+    if (!notesToExport || notesToExport.length === 0) {
+      alert('Nenhuma nota disponível para exportar.');
+      return;
+    }
+
+    if (exportCsvBtn) {
+      exportCsvBtn.disabled = true;
+      exportCsvBtn.innerHTML = '⏳ Gerando CSV...';
+    }
+
+    try {
+      const headers = ['ID', 'Data', 'Título', 'Categorias', 'Resumo', 'Link'];
+      const rows = notesToExport.map(note => [
+        note.id || '',
+        note.date_formatted || note.updated || '',
+        note.title || '',
+        (note.tags || []).join('; '),
+        note.summary || '',
+        note.link || ''
+      ]);
+
+      const escapeCsvCell = (val) => {
+        const str = String(val || '').replace(/"/g, '""');
+        return `"${str}"`;
+      };
+
+      const csvContent = [
+        headers.map(escapeCsvCell).join(','),
+        ...rows.map(row => row.map(escapeCsvCell).join(','))
+      ].join('\r\n');
+
+      // BOM UTF-8 (\uFEFF) para garantir suporte correto no Excel em português
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const downloadLink = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadLink.href = url;
+      downloadLink.download = `bigquery_notas_${dateStr}.csv`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(url);
+
+      if (exportCsvBtn) {
+        exportCsvBtn.innerHTML = '✓ Exportado!';
+        exportCsvBtn.classList.add('btn-success');
+        setTimeout(() => {
+          exportCsvBtn.disabled = false;
+          exportCsvBtn.innerHTML = '📥 <span class="hide-mobile">Exportar para CSV</span>';
+          exportCsvBtn.classList.remove('btn-success');
+        }, 2000);
+      }
+    } catch (err) {
+      console.error('Erro ao exportar CSV:', err);
+      alert('Ocorreu um erro ao gerar o arquivo CSV.');
+      if (exportCsvBtn) {
+        exportCsvBtn.disabled = false;
+        exportCsvBtn.innerHTML = '📥 <span class="hide-mobile">Exportar para CSV</span>';
+      }
+    }
+  }
+
+  /**
    * Renderizar cartões do feed
    */
   function renderFeed() {
@@ -450,8 +556,10 @@
             <button class="btn btn-tweet card-tweet-btn" title="Tweetar esta atualização no 𝕏">
               𝕏 Tweetar
             </button>
+            <button class="btn btn-secondary copy-btn" title="Copiar nota para a área de transferência">
+              📋 <span class="hide-mobile">Copiar</span>
+            </button>
             ${note.link ? `<a href="${escapeHtml(note.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon" title="Abrir documentação oficial">🔗</a>` : ''}
-            <button class="btn btn-secondary btn-icon copy-btn" title="Copiar link direto">📋</button>
             <button class="btn btn-secondary toggle-card-btn">
               ${isExpanded ? 'Recolher ▲' : 'Expandir ▼'}
             </button>
@@ -483,11 +591,23 @@
       });
 
       const copyBtn = card.querySelector('.copy-btn');
-      copyBtn.addEventListener('click', () => {
-        const linkToCopy = note.link || window.location.href;
-        navigator.clipboard.writeText(linkToCopy).then(() => {
-          copyBtn.textContent = '✓';
-          setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
+      copyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tagList = (note.tags || []).join(', ') || 'Geral';
+        const formattedDate = note.date_formatted || note.updated || '';
+        const textToCopy = `📢 ${note.title} (${formattedDate})\n` +
+          `🏷️ Categorias: ${tagList}\n\n` +
+          `${note.summary || ''}\n\n` +
+          (note.link ? `🔗 Documentação: ${note.link}` : '');
+
+        copyTextToClipboard(textToCopy, () => {
+          const original = copyBtn.innerHTML;
+          copyBtn.innerHTML = '✓ Copiado!';
+          copyBtn.classList.add('btn-success');
+          setTimeout(() => {
+            copyBtn.innerHTML = original;
+            copyBtn.classList.remove('btn-success');
+          }, 2000);
         });
       });
 

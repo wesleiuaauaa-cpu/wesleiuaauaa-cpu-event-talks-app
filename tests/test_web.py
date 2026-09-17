@@ -60,8 +60,7 @@ def test_flask_index_page() -> None:
     assert b"js/app.js" in response.data
     assert b"tweet-modal" in response.data
     assert b"refresh-btn" in response.data
-
-
+    assert b"export-csv-btn" in response.data
 
 
 def test_flask_health_endpoint() -> None:
@@ -80,3 +79,13 @@ def test_flask_api_notes_endpoint() -> None:
     assert json_data["success"] is True
     assert "entries" in json_data["data"]
     assert len(json_data["data"]["entries"]) > 0
+
+
+def test_flask_export_csv_endpoint() -> None:
+    client = app.test_client()
+    response = client.get("/api/export/csv")
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/csv")
+    assert "bigquery_release_notes.csv" in response.headers.get("Content-Disposition", "")
+    assert b"ID" in response.data
+    assert "Título".encode() in response.data
