@@ -2,7 +2,7 @@ import typer
 from rich.console import Console
 
 from cli_antigravity import __version__
-from cli_antigravity.commands import config_cmd, info, task
+from cli_antigravity.commands import config_cmd, info, task, web
 from cli_antigravity.core.config import settings
 from cli_antigravity.core.logger import setup_logger
 
@@ -18,6 +18,7 @@ console = Console()
 app.add_typer(info.app, name="info")
 app.add_typer(config_cmd.app, name="config")
 app.add_typer(task.app, name="task")
+app.add_typer(web.cmd_app, name="web")
 
 
 def version_callback(value: bool) -> None:

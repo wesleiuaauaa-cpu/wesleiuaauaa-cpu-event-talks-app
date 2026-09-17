@@ -18,7 +18,9 @@ dependencies = [
     "pydantic-settings>=2.2.0",
     "loguru>=0.7.2",
     "python-dotenv>=1.0.1",
+    "flask>=3.0.0",
 ]
+
 
 [project.scripts]
 cli-antigravity = "cli_antigravity.main:app"

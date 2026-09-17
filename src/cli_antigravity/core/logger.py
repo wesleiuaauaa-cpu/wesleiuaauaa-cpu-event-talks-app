@@ -10,10 +10,7 @@ CONSOLE_FORMAT = (
     "<level>{message}</level>"
 )
 
-FILE_FORMAT = (
-    "{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | "
-    "{name}:{function}:{line} - {message}"
-)
+FILE_FORMAT = "{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
 
 
 def setup_logger(log_level: str = "INFO", log_file: Path | None = None) -> None:
@@ -39,4 +36,3 @@ def setup_logger(log_level: str = "INFO", log_file: Path | None = None) -> None:
             compression="zip",
             format=FILE_FORMAT,
         )
-

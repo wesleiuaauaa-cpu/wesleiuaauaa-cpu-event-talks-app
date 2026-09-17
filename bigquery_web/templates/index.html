@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BigQuery Release Notes</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="/" class="brand">
+        <div class="brand-icon">BQ</div>
+        <div class="brand-text">
+          <h1>BigQuery Release Notes</h1>
+          <p>Official Google Cloud Feed Reader</p>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <button id="theme-toggle-btn" class="btn btn-secondary" title="Toggle color theme">
+          🌙 <span class="hide-mobile">Dark</span>
+        </button>
+        <button id="refresh-btn" class="btn btn-primary" title="Fetch latest feed updates">
+          🔄 Refresh Feed
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Container -->
+  <main class="main-content">
+    
+    <!-- Meta and Metrics Bar -->
+    <section class="meta-banner">
+      <div class="stats-group">
+        <div class="stat-item">
+          <span class="stat-label">Total Releases</span>
+          <span class="stat-value" id="total-count">--</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Feed Last Updated</span>
+          <span class="stat-value" id="last-updated">--</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Cache Synced At</span>
+          <span class="stat-value" id="last-fetched">--</span>
+        </div>
+      </div>
+      <div>
+        <button id="toggle-all-btn" class="btn btn-secondary">Collapse All</button>
+      </div>
+    </section>
+
+    <!-- Controls: Search & Category Chips -->
+    <section class="control-panel">
+      <div class="search-row">
+        <div class="search-input-wrapper">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            id="search-input" 
+            placeholder="Search release notes by keyword, model, feature (e.g. Gemini, ML, Vector)..." 
+            autocomplete="off"
+          />
+        </div>
+        <select id="sort-select" class="sort-select" title="Sort order">
+          <option value="desc">Sort: Newest First</option>
+          <option value="asc">Sort: Oldest First</option>
+        </select>
+      </div>
+
+      <!-- Tag Filters -->
+      <div class="tags-filter-bar" id="tags-container">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+    </section>
+
+    <!-- Release Notes Feed -->
+    <section class="feed-stream" id="feed-container">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <h3>Loading Release Notes...</h3>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>
+      Data sourced from 
+      <a href="https://docs.cloud.google.com/feeds/bigquery-release-notes.xml" target="_blank" rel="noopener noreferrer">
+        Google Cloud BigQuery Release Notes Atom Feed
+      </a>.
+    </p>
+    <p style="margin-top: 0.35rem;">
+      Built with Python Flask and vanilla HTML5, CSS3, & JavaScript.
+    </p>
+  </footer>
+
+  <!-- Application Script -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
